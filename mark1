@@ -31,3 +31,63 @@ getData(data: { v1: any, v2: any }) {
     console.log(data.v1 + data.v2)
     this.cData = data.v1 + data.v2;
   }
+
+
+
+**************************************************************************************************
+
+for file upload:API
+
+    [Route("api/[controller]")]
+    [ApiController]
+    public class fileupload : ControllerBase
+    {
+        [HttpPost("uploadFile")]
+        [DisableRequestSizeLimit]
+        public IActionResult upload()
+        {
+            try
+            {
+                var file = Request.Form.Files[0];
+                var folderName = Path.Combine("Resources", "Images");
+                var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
+                if(file.Length>0)
+                {
+                    var fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
+                    var fullPath = Path.Combine(pathToSave, fileName);
+                    var dbPath = Path.Combine(folderName, fileName);
+
+                    using(var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        file.CopyTo(stream);
+                    }
+                    return Ok(dbPath);
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+    }
+**************************************************************************************************
+Angular Code: 
+onfilechange(e: any) {
+    if (e.target.files.length > 0) {
+      this.file = e.target.files[0];
+      if (this.file.type == 'image/jpeg' || this.file.type == 'image/png') {
+
+        const formData = new FormData();
+        formData.append('file', this.file);
+        this.http.post('https://localhost:7085/api/fileupload/uploadFile', formData).subscribe((res: any) => {
+        })
+      }
+      else {
+        alert('File type not supported');
+      }
+    }
+  }
